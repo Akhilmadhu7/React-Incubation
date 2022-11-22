@@ -4,13 +4,12 @@ import Axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 
 const baseUrl = "http://127.0.0.1:8000/register";
 
 function Signup() {
   const navigate = useNavigate();
-  const [formErrors, setFormErrors] = useState({});
-  const [isSubmit, setIsSubmit] = useState(false);
   const [userData, setUserData] = useState({
     first_name: "",
     last_name: "",
@@ -19,6 +18,13 @@ function Signup() {
     password: "",
     password2: "",
   });
+
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState:{errors}
+  } = useForm();
 
   const handleChange = (e) => {
     setUserData({
@@ -29,13 +35,9 @@ function Signup() {
 
   console.log(userData);
 
-  const submitForm = (e) => {
+  const onSubmit = (data,e) => {
     e.preventDefault();
-    setFormErrors(validate(userData));
-    if (formErrors) {
-      Swal.fire("error", "Something went wrong!");
-    }
-
+    
     Axios.post(baseUrl, {
       first_name: userData.first_name,
       last_name: userData.last_name,
@@ -45,45 +47,12 @@ function Signup() {
       password2: userData.password2,
     }).then((response) => {
       console.log(response.data);
-      navigate("/login");
+      navigate("/");
     });
+  
   };
 
-  useEffect(() => {
-    if (Object.keys(formErrors).length === 0 && isSubmit) {
-      console.log(userData);
-    }
-  }, [formErrors]);
-
-  const validate = (values) => {
-    console.log("validating");
-    const errors = {};
-    if (!values.first_name) {
-      console.log("ASDFSAD");
-      errors.first_name = "First name is required";
-
-      console.log(errors.first_name, "oooooo");
-    }
-    if (!values.last_name) {
-      errors.last_name = "Last name is required";
-    }
-    if (!values.email) {
-      errors.email = "Email  is required";
-    }
-    if (!values.username) {
-      errors.username = "Username is required";
-    }
-    if (!values.password) {
-      errors.password = "Password is required";
-    }
-    if (!values.password.length < 4) {
-      errors.password = "Password length more than 4 characters";
-    }
-    if (values.password !== values.password2) {
-      errors.password2 = "Confrim password does not match";
-    }
-    return errors;
-  };
+  
 
   return (
     <div>
@@ -92,7 +61,7 @@ function Signup() {
           <h1 className="text-3xl font-semibold text-center text-indigo-700 underline uppercase decoration-wavy">
             Sign UP
           </h1>
-          <form className="mt-6 text-left ">
+          <form className="mt-6 text-left " onSubmit={handleSubmit(onSubmit)}>
             <div className="">
               <div className="  justify-around grid sm:grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="mb-2">
@@ -104,12 +73,25 @@ function Signup() {
                   </label>
 
                   <input
+                  {...register("first_name", {
+                    required: "Name is required",
+                    pattern: {
+                      value: /^[A-Za-z\s]{3,}$/,
+                      message:
+                        "Must be Characters & should not be less than 3",
+                    },
+                  })}
                     type="text"
                     name="first_name"
                     onChange={handleChange}
                     className="block w-full px-4 py-2 mt-2 text-indigo-700 bg-white border rounded-md focus:border-indigo-400 focus:ring-indigo-300 focus:outline-none focus:ring focus:ring-opacity-40"
                   />
-                  <p className="text-red-600">{formErrors.first_name}</p>
+                  {errors.first_name && (
+                      <small className="text-red-500">
+                        {errors.first_name.message}
+                      </small>
+                    )}
+                  
                 </div>
 
                 <div className="mb-2">
@@ -120,12 +102,25 @@ function Signup() {
                     Lastname
                   </label>
                   <input
+                  {...register("last_name", {
+                    required: "Name is required",
+                    pattern: {
+                      value: /^[A-Za-z\s]{3,}$/,
+                      message:
+                        "Must be Characters & should not be less than 3",
+                    },
+                  })}
                     type="text"
                     onChange={handleChange}
                     name="last_name"
                     className="block w-full px-4 py-2 mt-2 text-indigo-700 bg-white border rounded-md focus:border-indigo-400 focus:ring-indigo-300 focus:outline-none focus:ring focus:ring-opacity-40"
                   />
-                  <p className="text-red-600">{formErrors.last_name}</p>
+                  {errors.last_name && (
+                      <small className="text-red-500">
+                        {errors.last_name.message}
+                      </small>
+                    )}
+                  
                 </div>
               </div>
               <div className="mb-2  justify-around grid sm:grid-cols-1 md:grid-cols-2 gap-4">
@@ -137,12 +132,20 @@ function Signup() {
                     Username
                   </label>
                   <input
+                  {...register("username",{
+                    required: "Username required"
+                  })}
                     type="text"
                     onChange={handleChange}
                     name="username"
                     className="block w-full px-4 py-2 mt-2 text-indigo-700 bg-white border rounded-md focus:border-indigo-400 focus:ring-indigo-300 focus:outline-none focus:ring focus:ring-opacity-40"
                   />
-                  <p className="text-red-600">{formErrors.username}</p>
+                  {errors.username && (
+                      <small className="text-red-500">
+                        {errors.username.message}
+                      </small>
+                    )}
+                 
                 </div>
 
                 <div className="mb-2">
@@ -153,29 +156,58 @@ function Signup() {
                     Email
                   </label>
                   <input
+                  {...register("email", {
+                    required: "Email required",
+                    pattern: {
+                      value: /^[a-zA-Z0-9-_]+@[a-zA-Z0-9]+\.[a-z]{2,3}$/,
+                      message: "Invalid email",
+                    },
+                  })}
                     type="email"
                     onChange={handleChange}
                     name="email"
                     className="block w-full px-4 py-2 mt-2 text-indigo-700 bg-white border rounded-md focus:border-indigo-400 focus:ring-indigo-300 focus:outline-none focus:ring focus:ring-opacity-40"
                   />
-                  <p className="text-red-600">{formErrors.email}</p>
+                  {errors.email && (
+                      <small className="text-red-500">
+                        {errors.email.message}
+                      </small>
+                    )}
+                  
                 </div>
               </div>
               <div className="mb-2  justify-around grid sm:grid-cols-1 md:grid-cols-2'">
                 <div>
                   <label
+                  
                     for="password"
                     className="block text-sm font-semibold text-gray-800"
                   >
                     Password
                   </label>
                   <input
+                  {...register("password", {
+                    required: "Password required",
+                    pattern: {
+                      value: /^[a-zA-Z0-9]{8}[0-9]*[A-Za-z]*$/,
+                      message: "Password should be strong"
+                    },
+                    minLength: {
+                      value: 8,
+                      message: "Password should not be less than 8 characters"
+                    }
+                  })}
                     type="password"
                     onChange={handleChange}
                     name="password"
                     className="block w-full px-4 py-2 mt-2 text-indigo-700 bg-white border rounded-md focus:border-indigo-400 focus:ring-indigo-300 focus:outline-none focus:ring focus:ring-opacity-40"
                   />
-                  <p className="text-red-600">{formErrors.password}</p>
+                  {errors.password && (
+                      <small className="text-red-500">
+                        {errors.password.message}
+                      </small>
+                    )}
+                  
                 </div>
 
                 <div>
@@ -186,17 +218,36 @@ function Signup() {
                     Confirm Password
                   </label>
                   <input
+                  {...register("password2", {
+                    required: "Password required",
+                    pattern: {
+                      value: /^[a-zA-Z0-9]{8}[0-9]*[A-Za-z]*$/,
+                      message: "Password should be strong"
+                    },
+                    minLength: {
+                      value: 8,
+                      message: "Password should not be less than 8 characters"
+                    },
+                    validate:(value) => {
+                      const {password} = getValues();
+                      return password === value || 'Password should match'
+                    }
+                  })}
                     type="password"
                     onChange={handleChange}
                     name="password2"
                     className="block w-full px-4 py-2 mt-2 text-indigo-700 bg-white border rounded-md focus:border-indigo-400 focus:ring-indigo-300 focus:outline-none focus:ring focus:ring-opacity-40"
                   />
-                  <p className="text-red-600">{formErrors.password2}</p>
+                  {errors.password2 && (
+                      <small className="text-red-500">
+                        {errors.password2.message}
+                      </small>
+                    )}
+                  
                 </div>
               </div>
               <div className="mt-6">
                 <button
-                  onClick={submitForm}
                   className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-indigo-700 rounded-md hover:bg-indigo-600 focus:outline-none focus:bg-indigo-600"
                 >
                   Signup

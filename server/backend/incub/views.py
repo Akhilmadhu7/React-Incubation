@@ -22,15 +22,16 @@ from django.db.models import Count
 class Register(APIView):
 
     def post(self,request):
-
+        print('ddd',request.data)
         account = AccountSerializer(data=request.data)
         data = {}
         if account.is_valid():
             account.save()
+            data['Data'] = account.data
             data['response'] = 'Registered'
         else:
             data = account.errors
-        return Response(data.username)     
+        return Response(data,status=status.HTTP_201_CREATED)     
 
 
 
